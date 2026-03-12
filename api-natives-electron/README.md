@@ -149,19 +149,48 @@ npm install
 npx electron-builder --mac
 ```
 
-Le fichier `.dmg` est généré dans `dist/`. Pour une archive zip en plus :
-```json
-"mac": { "target": ["dmg", "zip"] }
-```
+Le build génère deux fichiers dans `dist/` :
 
-Pour distribuer hors App Store sans erreur de sécurité, signer et notariser l'app :
+| Fichier | Équivalent Windows | Usage |
+|---|---|---|
+| `api-natives-electron.dmg` | Installeur `.exe` NSIS | Distribuer à d'autres utilisateurs |
+| `mac/api-natives-electron.app` | Exécutable portable `.exe` | Lancer directement sans installer |
+
+#### Installer via le DMG
+
+1. Double-clic sur le `.dmg`
+2. Glisser l'icône de l'app vers le dossier **Applications**
+3. Lancer depuis le **Launchpad** ou **Spotlight** (⌘ + Espace)
+
+#### Lancer le `.app` directement
+
+Double-clic sur `dist/mac/api-natives-electron.app` — c'est tout.
+
+#### Problème : app bloquée par macOS (Gatekeeper)
+
+Mac bloque les apps non signées avec ce message :
+> *"L'app ne peut pas être ouverte car elle provient d'un développeur non identifié"*
+
+**Solution rapide (sans certificat) :**
 ```bash
-# Variables d'environnement requises
+xattr -cr dist/mac/api-natives-electron.app
+```
+Ou : **clic droit sur l'app → Ouvrir → confirmer**.
+
+#### Pour distribuer sans ce blocage (optionnel)
+
+Signer et notariser l'app nécessite un compte Apple Developer :
+```bash
 export APPLE_ID="votre@apple.com"
 export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
 export APPLE_TEAM_ID="XXXXXXXXXX"
 
 npx electron-builder --mac --publish never
+```
+
+Pour une archive zip en plus du DMG :
+```json
+"mac": { "target": ["dmg", "zip"] }
 ```
 
 ---
