@@ -140,9 +140,36 @@ npm start
 
 ## Compiler l'application
 
+### macOS (DMG)
+
+> Doit être exécuté sur une machine macOS (Apple impose la signature native).
+
+```bash
+npm install
+npx electron-builder --mac
+```
+
+Le fichier `.dmg` est généré dans `dist/`. Pour une archive zip en plus :
+```json
+"mac": { "target": ["dmg", "zip"] }
+```
+
+Pour distribuer hors App Store sans erreur de sécurité, signer et notariser l'app :
+```bash
+# Variables d'environnement requises
+export APPLE_ID="votre@apple.com"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+export APPLE_TEAM_ID="XXXXXXXXXX"
+
+npx electron-builder --mac --publish never
+```
+
+---
+
 ### Linux (AppImage)
 
 ```bash
+npm install
 npx electron-builder --linux
 ```
 
@@ -150,6 +177,13 @@ Exécuter l'AppImage générée (si FUSE indisponible sur WSL2) :
 ```bash
 ./dist/linux-unpacked/api-natives-electron
 ```
+
+Pour générer plusieurs formats en même temps :
+```json
+"linux": { "target": ["AppImage", "deb", "rpm"] }
+```
+
+---
 
 ### Windows — depuis WSL2/Linux
 
