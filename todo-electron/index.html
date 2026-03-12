@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!-- =============================================================================
+     index.html — La page d'interface utilisateur de l'application
+     =============================================================================
+     Ce fichier est la "face visible" de l'application.
+     Il contient 3 parties essentielles :
+       1. La structure HTML (les balises — ce qu'on voit)
+       2. Le CSS intégré dans style (la mise en forme — les couleurs, tailles...)
+       3. Le lien vers renderer.js (le comportement — ce qui se passe quand on clique)
+     ============================================================================= -->
+
+<html lang="fr">
+
+<head>
+  <!-- La balise head contient des informations sur la page,
+       mais rien qui s'affiche directement à l'écran. -->
+
+  <!-- Encodage des caractères : UTF-8 permet d'afficher correctement
+       les accents (é, è, ê, à, ç...) sur tous les systèmes. -->
+  <meta charset="UTF-8">
+
+  <!-- Le titre affiché dans la barre de titre de la fenêtre -->
+  <title>Ma Todo App</title>
+
+  <!-- =========================================================================
+       STYLE CSS — Toute la mise en forme visuelle de l'application
+       =========================================================================
+       Le CSS (Cascading Style Sheets) définit l'apparence :
+       couleurs, tailles, marges, animations, etc.
+       Il est écrit directement dans le HTML entre les balises style.
+       ========================================================================= -->
+  <style>
+
+    /* ── RESET + STYLES DE BASE ──
+       Par défaut, les navigateurs ajoutent des marges et paddings sur certains éléments.
+       Cette règle s'applique à TOUS les éléments et remet ces valeurs à zéro
+       pour avoir un contrôle total sur l'apparence.
+       "box-sizing: border-box" : le padding et la bordure sont inclus dans la largeur/hauteur
+       (comportement plus intuitif pour calculer les tailles). */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Style général du body (tout le fond de la page) */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif; /* Police de caractères (avec alternatives) */
+      background: #f0f2f5;  /* Fond gris très clair */
+      padding: 30px;        /* Espace intérieur de 30px tout autour */
+      max-width: 800px;     /* La page ne dépasse pas 800px de large */
+      margin: 0 auto;       /* "auto" sur les côtés = centrer horizontalement */
+    }
+
+    /* Titre principal h1 */
+    h1 {
+      color: #1B4F72;       /* Bleu foncé */
+      margin-bottom: 20px;  /* 20px d'espace en dessous */
+      font-size: 28px;
+    }
+
+
+    /* ── FORMULAIRE D'AJOUT ──
+       La barre avec les champs de saisie et le bouton "Ajouter" */
+    .add-form {
+      display: flex;        /* Flexbox : aligne les enfants côte à côte sur une ligne */
+      gap: 10px;            /* 10px d'espace entre chaque enfant */
+      margin-bottom: 25px;  /* Espace sous le formulaire */
+    }
+
+    /* Les champs de texte input dans le formulaire */
+    .add-form input {
+      flex: 1;              /* "flex: 1" = prend tout l'espace disponible (s'étire) */
+      padding: 12px 16px;   /* Espace intérieur : 12px haut/bas, 16px gauche/droite */
+      border: 2px solid #ddd;       /* Bordure grise */
+      border-radius: 8px;           /* Coins arrondis */
+      font-size: 15px;
+      transition: border-color 0.2s; /* Animation douce sur la couleur de bordure */
+    }
+
+    /* Quand le champ est sélectionné (l'utilisateur clique dedans) */
+    .add-form input:focus {
+      border-color: #1B4F72; /* La bordure devient bleue */
+      outline: none;          /* Supprime le contour par défaut du navigateur */
+    }
+
+    /* Le bouton "Ajouter" — couleur foncée pour respecter le contraste WCAG */
+    .add-form button {
+      padding: 12px 24px;
+      background: #1B4F72;  /* Bleu foncé (contraste suffisant avec le texte blanc) */
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;      /* Le curseur devient une main au survol */
+      font-weight: bold;
+      transition: background 0.2s; /* Animation douce sur la couleur de fond */
+    }
+
+    /* Quand la souris passe sur le bouton */
+    .add-form button:hover {
+      background: #154360; /* Bleu encore plus foncé au survol */
+    }
+
+
+    /* ── COMPTEUR DE TÂCHES ──
+       Le petit texte "X tâche(s)" sous le formulaire */
+    .counter {
+      color: #888;          /* Gris moyen */
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+
+    /* ── UNE TÂCHE (bloc blanc) ──
+       Chaque tâche est un div avec la classe "task" */
+    .task {
+      display: flex;            /* Aligne la case, le contenu et le bouton sur une ligne */
+      align-items: center;      /* Centre verticalement tous les éléments */
+      gap: 12px;                /* Espace entre les éléments */
+      padding: 14px 16px;
+      margin-bottom: 8px;       /* Espace entre deux tâches */
+      background: white;        /* Fond blanc */
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* Légère ombre portée */
+      transition: transform 0.1s, box-shadow 0.1s; /* Animation au survol */
+    }
+
+    /* Animation quand la souris passe sur une tâche :
+       la tâche "se lève" légèrement */
+    .task:hover {
+      transform: translateY(-1px);                 /* Monte de 1px */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);     /* Ombre plus prononcée */
+    }
+
+    /* Une tâche terminée (classe "done" ajoutée dynamiquement par renderer.js) */
+    .task.done {
+      opacity: 0.5; /* Semi-transparente pour indiquer qu'elle est faite */
+    }
+
+    /* Le titre d'une tâche terminée est barré */
+    .task.done .task-title {
+      text-decoration: line-through; /* Texte barré */
+    }
+
+    /* La case à cocher (checkbox) */
+    .task input[type=checkbox] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer; /* Curseur main au survol */
+    }
+
+    /* La zone de contenu texte (titre + description + date) */
+    .task-content {
+      flex: 1; /* Prend tout l'espace disponible entre la case et le bouton supprimer */
+    }
+
+    /* Le titre de la tâche */
+    .task-title {
+      font-size: 16px;
+      color: #333; /* Gris foncé presque noir */
+    }
+
+    /* La description de la tâche (plus petit et plus gris) */
+    .task-desc {
+      font-size: 13px;
+      color: #767676; /* Gris moyen — contraste minimum sur fond blanc */
+      margin-top: 2px;
+    }
+
+    /* La date de création (encore plus petit) */
+    .task-date {
+      font-size: 11px;
+      color: #767676; /* Gris moyen — contraste minimum sur fond blanc */
+      margin-top: 2px;
+    }
+
+    /* Le bouton "Supprimer" rouge — couleur foncée pour respecter le contraste WCAG */
+    .btn-delete {
+      padding: 6px 14px;
+      background: #a93226; /* Rouge foncé (contraste suffisant avec le texte blanc) */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: 0.7;         /* Légèrement transparent par défaut */
+      transition: opacity 0.2s;
+    }
+
+    /* Au survol, le bouton supprimer devient pleinement visible */
+    .btn-delete:hover {
+      opacity: 1; /* Complètement opaque */
+    }
+
+    /* Le bouton "Modifier" vert — placé à côté du bouton supprimer */
+    .btn-update {
+      padding: 6px 14px;
+      background: #1e8449; /* Vert foncé (contraste suffisant avec le texte blanc) */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: 0.7;         /* Légèrement transparent par défaut */
+      transition: opacity 0.2s;
+      margin-right: 6px;    /* Petit espace entre le bouton modifier et le bouton supprimer */
+    }
+
+    /* Au survol, le bouton modifier devient pleinement visible */
+    .btn-update:hover {
+      opacity: 1; /* Complètement opaque */
+    }
+
+    /* ── MODE ÉDITION ──
+       Quand l'utilisateur clique sur "Modifier", le formulaire passe en mode édition.
+       On lui ajoute la classe "editing" pour le mettre en évidence visuellement. */
+    .add-form.editing {
+      background: #fef9e7;      /* Fond jaune très clair pour signaler le mode édition */
+      border-radius: 10px;
+      padding: 8px;
+      border: 2px solid #f0c040; /* Bordure jaune/orange pour attirer l'attention */
+    }
+
+    /* En mode édition, le bouton "Mettre à jour" prend une couleur verte */
+    .add-form.editing button {
+      background: #1e8449; /* Vert foncé à la place du bleu foncé habituel */
+    }
+
+    /* Au survol en mode édition */
+    .add-form.editing button:hover {
+      background: #196f3d; /* Vert encore plus foncé au survol */
+    }
+
+    /* Message affiché quand il n'y a aucune tâche */
+    .empty {
+      color: #767676;
+      text-align: center;  /* Texte centré */
+      padding: 60px 0;     /* Grand espace pour que le message soit bien visible */
+      font-size: 18px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- =========================================================================
+       STRUCTURE HTML — Les éléments visibles de la page
+       ========================================================================= -->
+
+  <!-- Titre principal de l'application -->
+  <h1>Mes Tâches</h1>
+
+
+  <!-- ── FORMULAIRE D'AJOUT ──
+       Contient deux champs texte et un bouton.
+       Ces éléments sont récupérés dans renderer.js via document.getElementById(). -->
+  <div class="add-form">
+
+    <!-- Champ pour saisir le TITRE de la tâche.
+         Son identifiant est "title".
+         L'attribut autofocus place le curseur ici dès l'ouverture de la page. -->
+    <input type="text" id="title" placeholder="Titre de la tâche" autofocus>
+
+    <!-- Champ pour saisir la DESCRIPTION de la tâche (facultatif).
+         Son identifiant est "desc". -->
+    <input type="text" id="desc" placeholder="Description (optionnel)">
+
+    <!-- Bouton de validation pour ajouter la tâche.
+         Son identifiant est "btn-add".
+         renderer.js lui attache un écouteur de clic. -->
+    <button id="btn-add">+ Ajouter</button>
+
+  </div>
+
+
+  <!-- ── COMPTEUR ──
+       Ce div est rempli dynamiquement par renderer.js.
+       Son identifiant est "counter".
+       Exemple de contenu généré par JavaScript : "3 tâches" -->
+  <div class="counter" id="counter"></div>
+
+  <!-- ── LISTE DES TÂCHES ──
+       Ce div est VIDE dans le HTML de départ.
+       C'est renderer.js qui le remplit dynamiquement avec les tâches.
+       Son identifiant est "task-list".
+       Chaque tâche sera un div créé par JavaScript et inséré ici. -->
+  <div id="task-list"></div>
+
+
+  <!-- ── CHARGEMENT DU JAVASCRIPT ──
+       Cette balise script charge le fichier renderer.js.
+       IMPORTANT : elle est placée en BAS du body, APRES tous les éléments HTML.
+       Pourquoi ? Pour s'assurer que tous les éléments (title, desc, btn-add, etc.)
+       existent déjà dans la page AVANT que JavaScript essaie de les chercher.
+       Si on mettait ce script dans le head, les getElementById retourneraient null
+       car les éléments n'auraient pas encore été créés ! -->
+  <script src="renderer.js"></script>
+
+</body>
+</html>
